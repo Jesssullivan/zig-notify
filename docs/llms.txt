@@ -1,0 +1,39 @@
+# zig-notify
+
+> Portable desktop notifications in Zig with C FFI
+
+## Overview
+
+zig-notify provides cross-platform desktop notification support. On macOS it uses UNUserNotificationCenter, on Linux it uses libnotify.
+
+## Key Facts
+
+- Language: Zig 0.15.2+
+- Platforms: macOS (UNUserNotificationCenter), Linux (libnotify)
+- License: Zlib OR MIT
+- API: C FFI via zig_notify.h
+
+## C API Summary
+
+- zig_notify_init() -- initialize backend (required on Linux, no-op on macOS)
+- zig_notify_deinit() -- clean up (required on Linux, no-op on macOS)
+- zig_notify_request_permission() -- request permission (macOS only)
+- zig_notify_send() -- send a notification with title, body, and urgency
+
+Urgency levels:
+- ZIG_NOTIFY_URGENCY_LOW (0)
+- ZIG_NOTIFY_URGENCY_NORMAL (1)
+- ZIG_NOTIFY_URGENCY_CRITICAL (2)
+
+## Source Files
+
+- src/ffi.zig -- C FFI exports
+- src/notify.zig -- platform dispatch
+- src/notify_macos.zig -- macOS UNUserNotificationCenter backend
+- src/notify_linux.zig -- Linux libnotify backend
+- include/zig_notify.h -- C header
+
+## Links
+
+- Repository: https://github.com/Jesssullivan/zig-notify
+- Documentation: https://jesssullivan.github.io/zig-notify/

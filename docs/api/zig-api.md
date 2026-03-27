@@ -1,66 +1,49 @@
-# Zig API Reference: zig-notify
+# Zig API Reference
 
-## `notify.zig`
-*Platform notification abstraction*
+Auto-generated from Zig source files in [`src/`](https://github.com/Jesssullivan/zig-notify/tree/main/src).
 
-### Types
+These are the internal Zig modules. For C/Swift interop, see the [C FFI Reference](c-ffi.md).
 
-#### `Urgency` (enum)
+### `notify.zig`
 
-### Functions
+```zig
+pub const Urgency = enum(u8) {
+```
 
-#### `send`
 Send a desktop notification.
-
 ```zig
-pub fn send(title: []const u8, body: ?[]const u8, urgency: Urgency) !void
+pub fn send(title: []const u8, body: ?[]const u8, urgency: Urgency) !void {
 ```
 
-#### `init`
 Initialize notification backend (Linux: notify_init, macOS: no-op).
-
 ```zig
-pub fn init(app_name: []const u8) !void
+pub fn init(app_name: []const u8) !void {
 ```
 
-#### `deinit`
 Clean up notification backend (Linux: notify_uninit, macOS: no-op).
-
 ```zig
-pub fn deinit() void
+pub fn deinit() void {
 ```
 
-## `notify_linux.zig`
-*Linux libnotify backend*
 
-### Functions
-
-#### `init`
+### `notify_linux.zig`
 
 ```zig
-pub fn init(app_name: []const u8) !void
+pub fn init(app_name: []const u8) !void {
 ```
 
-#### `deinit`
-
 ```zig
-pub fn deinit() void
+pub fn deinit() void {
 ```
 
-#### `send`
-
 ```zig
-pub fn send(title: []const u8, body: ?[]const u8, urgency: notify.Urgency) !void
+pub fn send(title: []const u8, body: ?[]const u8, urgency: notify.Urgency) !void {
 ```
 
-## `notify_macos.zig`
-*macOS UNUserNotificationCenter backend*
 
-### Functions
-
-#### `send`
+### `notify_macos.zig`
 
 ```zig
-pub fn send(title: []const u8, body: ?[]const u8, urgency: notify.Urgency) !void
+pub fn send(title: []const u8, body: ?[]const u8, urgency: notify.Urgency) !void {
 ```
 

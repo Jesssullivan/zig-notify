@@ -28,7 +28,7 @@ jobs:
 
       - name: Install libnotify (Linux)
         if: runner.os == 'Linux'
-        run: sudo apt-get install -y libnotify-dev
+        run: sudo apt-get install -y libnotify-dev libglib2.0-dev libgdk-pixbuf-2.0-dev
 
       - name: Build static library
         run: zig build -Doptimize=ReleaseFast

@@ -10,15 +10,23 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
-    // On Linux, add system include paths for libnotify/glib/gdk-pixbuf
+    // On Linux, add system include paths for libnotify/glib/gdk-pixbuf.
+    // Paths vary by distro — Debian/Ubuntu use multiarch triplets,
+    // Fedora/RHEL/Rocky use /usr/lib64, Arch uses /usr/lib.
+    // addSystemIncludePath silently ignores non-existent directories.
     const resolved_target = root_module.resolved_target.?;
     if (resolved_target.result.os.tag == .linux) {
         root_module.link_libc = true;
         root_module.addSystemIncludePath(.{ .cwd_relative = "/usr/include/libnotify" });
         root_module.addSystemIncludePath(.{ .cwd_relative = "/usr/include/glib-2.0" });
+        root_module.addSystemIncludePath(.{ .cwd_relative = "/usr/include/gdk-pixbuf-2.0" });
+        // Debian/Ubuntu multiarch
         root_module.addSystemIncludePath(.{ .cwd_relative = "/usr/lib/x86_64-linux-gnu/glib-2.0/include" });
         root_module.addSystemIncludePath(.{ .cwd_relative = "/usr/lib/aarch64-linux-gnu/glib-2.0/include" });
-        root_module.addSystemIncludePath(.{ .cwd_relative = "/usr/include/gdk-pixbuf-2.0" });
+        // Fedora/RHEL/Rocky
+        root_module.addSystemIncludePath(.{ .cwd_relative = "/usr/lib64/glib-2.0/include" });
+        // Arch Linux
+        root_module.addSystemIncludePath(.{ .cwd_relative = "/usr/lib/glib-2.0/include" });
     }
 
     const lib = b.addLibrary(.{

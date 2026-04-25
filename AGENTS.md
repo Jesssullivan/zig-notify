@@ -1,40 +1,67 @@
-# zig-notify -- Agent Interface
+# AGENTS.md -- zig-notify
 
-## Capabilities
+## Persona
 
-- Send desktop notifications with title, body, and urgency level
-- Request notification permission (macOS)
-- Initialize/cleanup notification backend lifecycle (Linux)
-- Cross-platform: macOS osascript and Linux libnotify
+You are working on zig-notify, a cross-platform desktop notification library written in Zig with a C FFI surface. It sends notifications via osascript on macOS and libnotify on Linux, exposing a unified 4-function C API. Part of the [Tinyland Zig Libraries](https://libs.tinyland.dev).
 
-## C FFI Exports
+## Stack
 
-```c
-typedef enum {
-    ZIG_NOTIFY_URGENCY_LOW = 0,
-    ZIG_NOTIFY_URGENCY_NORMAL = 1,
-    ZIG_NOTIFY_URGENCY_CRITICAL = 2,
-} zig_notify_urgency_t;
+- **Language:** Zig 0.14.1+
+- **Output:** Static C library (`libzig-notify.a`) + Zig module
+- **Dependencies:** None on macOS (osascript is a system binary); libnotify + glib-2.0 on Linux
+- **Header:** `include/zig_notify.h` (4 C FFI functions)
+- **Tests:** Unit tests in `src/notify.zig`
+- **Docs:** MkDocs Material + Zig autodoc (`zig build docs`)
 
-int zig_notify_init(const char *app_name, size_t app_name_len);
+## Structure
 
-int zig_notify_send(
-    const char *title, size_t title_len,
-    const char *body, size_t body_len,
-    zig_notify_urgency_t urgency
-);
-
-int zig_notify_request_permission(void);
-
-void zig_notify_deinit(void);
+```
+src/ffi.zig              C FFI exports (4 functions)
+src/notify.zig           Platform dispatch (comptime macOS/Linux)
+src/notify_macos.zig     macOS backend (osascript `display notification`)
+src/notify_linux.zig     Linux backend (libnotify GLib API)
+include/zig_notify.h     C header with all function signatures and types
+examples/                C usage example
 ```
 
-## Error Codes
+## Commands
 
-- **init**: `0` = success, `-1` = failure
-- **send**: `0` = success, `-1` = failure
-- **request_permission**: `0` = granted, `-1` = denied, `-2` = error
-- **deinit**: No return value (always succeeds)
+```bash
+zig build                              # static library -> zig-out/lib/
+zig build -Doptimize=ReleaseFast       # optimized build
+zig build test                         # unit tests
+zig build docs                         # generate API documentation
+```
+
+## Style
+
+- Format with `zig fmt`
+- All `pub` and `export` functions require `///` doc comments
+- C FFI exports live exclusively in `src/ffi.zig`
+- Platform backends in `src/notify_<platform>.zig`, one file per platform
+- Error convention: return `0` on success, `-1` on failure from C FFI
+
+## Boundaries
+
+- **Do not** add GUI toolkit dependencies (GTK, Qt, Cocoa frameworks)
+- **Do not** bypass osascript on macOS (UNUserNotificationCenter requires an app bundle)
+- **Do not** add allocator-dependent APIs to the FFI surface (all buffers use fixed-size stacks)
+- **Do not** make libnotify calls from multiple threads (libnotify is not thread-safe)
+- **Do** keep the init/send/deinit lifecycle simple and symmetric across platforms
+- **Do** ensure new platform backends implement `init`, `deinit`, and `send`
+
+## C FFI Exports (zig_notify.h)
+
+| Function | Return | Description |
+|----------|--------|-------------|
+| `zig_notify_init` | `int` (0/-1) | Initialize notification backend (Linux: `notify_init`) |
+| `zig_notify_send` | `int` (0/-1) | Send notification with title, body, urgency |
+| `zig_notify_request_permission` | `int` (0/-1/-2) | Request permission (currently no-op on all platforms) |
+| `zig_notify_deinit` | `void` | Clean up notification resources |
+
+## Types
+
+- `zig_notify_urgency_t` -- Enum: `ZIG_NOTIFY_URGENCY_LOW` (0), `ZIG_NOTIFY_URGENCY_NORMAL` (1), `ZIG_NOTIFY_URGENCY_CRITICAL` (2).
 
 ## Thread Safety
 
@@ -43,40 +70,10 @@ On macOS, `zig_notify_send` spawns an `osascript` child process per call -- thre
 ## Platform Requirements
 
 **macOS:**
-- No frameworks needed (uses `osascript` binary, available on all macOS systems)
-- Urgency levels are ignored (macOS notifications have no urgency concept in display)
+- No frameworks needed (uses `osascript` binary, available on all macOS 13+ systems)
+- Urgency levels are accepted but ignored (macOS notifications have no urgency concept)
 
 **Linux:**
 - `apt install libnotify-dev` (Ubuntu/Debian) or `dnf install libnotify-devel` (Fedora/Rocky)
 - glib-2.0, gobject-2.0 (dependencies of libnotify)
 - A running notification daemon (dunst, mako, GNOME Shell, etc.)
-
-## Example: Complete Usage
-
-```c
-#include "zig_notify.h"
-#include <string.h>
-
-int main(void) {
-    // Initialize (required on Linux, no-op on macOS)
-    zig_notify_init("MyApp", 5);
-
-    // Send a notification
-    const char *title = "Build Complete";
-    const char *body = "Release build finished successfully";
-    zig_notify_send(
-        title, strlen(title),
-        body, strlen(body),
-        ZIG_NOTIFY_URGENCY_NORMAL
-    );
-
-    // Send title-only notification
-    const char *alert = "Warning";
-    zig_notify_send(alert, strlen(alert), NULL, 0, ZIG_NOTIFY_URGENCY_CRITICAL);
-
-    // Cleanup (required on Linux, no-op on macOS)
-    zig_notify_deinit();
-
-    return 0;
-}
-```

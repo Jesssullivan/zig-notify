@@ -1,14 +1,27 @@
+/// macOS notification backend using osascript (AppleScript `display notification`).
+///
+/// Avoids the `UNUserNotificationCenter` Objective-C runtime dependency.
+/// `UNUserNotificationCenter` requires an app bundle with an identifier,
+/// so this library uses the simpler osascript approach which works from
+/// any context (CLI tools, daemons, bundled apps).
+///
+/// No frameworks or system libraries are linked; `osascript` is a standard
+/// macOS system binary available on all supported versions (13+).
 const std = @import("std");
 const notify = @import("notify.zig");
 
-// macOS: Use osascript for notifications (avoids UNUserNotificationCenter
-// Objective-C runtime dependency). For production, this should use the
-// Objective-C runtime directly via @cImport or a thin ObjC bridge.
-//
-// UNUserNotificationCenter requires an app bundle with an identifier,
-// so for a library we use the simpler osascript approach which works
-// from any context.
-
+/// Send a notification via `osascript -e 'display notification ...'`.
+///
+/// Builds an AppleScript command string with the given title and optional
+/// body, escaping special characters for AppleScript string literals.
+/// Urgency is accepted for API compatibility but ignored -- macOS
+/// `display notification` has no urgency concept.
+///
+/// The command buffer is 2048 bytes; extremely long title + body
+/// combinations may return a write error.
+///
+/// Returns `error.SpawnFailed` if osascript cannot be launched, or
+/// `error.WaitFailed` if the child process cannot be waited on.
 pub fn send(title: []const u8, body: ?[]const u8, urgency: notify.Urgency) !void {
     _ = urgency; // macOS doesn't have urgency levels in display
 
@@ -35,6 +48,10 @@ pub fn send(title: []const u8, body: ?[]const u8, urgency: notify.Urgency) !void
     _ = child.wait() catch return error.WaitFailed;
 }
 
+/// Escape a string for use inside AppleScript double-quoted literals.
+///
+/// Backslash-escapes `"` and `\` characters. All other bytes are passed
+/// through verbatim (AppleScript strings are UTF-8 compatible).
 fn escapeAppleScript(writer: anytype, s: []const u8) !void {
     for (s) |c| {
         if (c == '"') {

@@ -1,8 +1,10 @@
+/// Linux notification backend using libnotify (GLib-based notification API).
+///
+/// Requires libnotify-dev (Debian/Ubuntu) or libnotify-devel (Fedora/Rocky)
+/// and a running notification daemon (dunst, mako, GNOME Shell, etc.).
+/// Links glib-2.0, gobject-2.0 at build time via system include paths.
 const std = @import("std");
 const notify = @import("notify.zig");
-
-// Linux: libnotify (GLib-based notification API)
-// Requires: libnotify-dev (Ubuntu) or libnotify-devel (Rocky/Fedora)
 
 const c = @cImport({
     @cInclude("libnotify/notify.h");
@@ -10,6 +12,14 @@ const c = @cImport({
 
 var initialized = false;
 
+/// Initialize libnotify with the given application name.
+///
+/// Calls `notify_init(app_name)` to register the application with the
+/// notification daemon. Must be called exactly once before `send`.
+/// `app_name` must be at most 255 bytes.
+///
+/// Returns `error.NameTooLong` if `app_name` exceeds the internal buffer,
+/// or `error.NotifyInitFailed` if `notify_init` returns failure.
 pub fn init(app_name: []const u8) !void {
     var name_buf: [256]u8 = undefined;
     if (app_name.len >= name_buf.len) return error.NameTooLong;
@@ -20,6 +30,10 @@ pub fn init(app_name: []const u8) !void {
     initialized = true;
 }
 
+/// Release libnotify resources.
+///
+/// Calls `notify_uninit()` if the backend was previously initialized.
+/// Safe to call multiple times; subsequent calls are no-ops.
 pub fn deinit() void {
     if (initialized) {
         c.notify_uninit();
@@ -27,6 +41,14 @@ pub fn deinit() void {
     }
 }
 
+/// Send a notification via libnotify.
+///
+/// Creates a `NotifyNotification` with the given title, optional body,
+/// and urgency level, then calls `notify_notification_show`.
+///
+/// Title is limited to 511 bytes, body to 2047 bytes. Exceeding these
+/// returns `error.TitleTooLong` or `error.BodyTooLong` respectively.
+/// Returns `error.NotInitialized` if `init` was not called first.
 pub fn send(title: []const u8, body: ?[]const u8, urgency: notify.Urgency) !void {
     if (!initialized) return error.NotInitialized;
 

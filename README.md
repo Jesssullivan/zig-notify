@@ -17,9 +17,35 @@ Desktop notifications have completely different APIs on macOS (UNUserNotificatio
 - **macOS**: osascript (AppleScript `display notification`)
 - **Linux**: libnotify (GLib notification API)
 
+## Installation
+
+### Zig Package Manager (recommended)
+
+```bash
+zig fetch --save git+https://github.com/Jesssullivan/zig-notify.git
+```
+
+Then in your `build.zig`:
+
+```zig
+const dep = b.dependency("zig-notify", .{ .target = target, .optimize = optimize });
+exe.root_module.addImport("zig-notify", dep.module("zig-notify"));
+```
+
+### Git Submodule (C FFI consumers)
+
+```bash
+git submodule add https://github.com/Jesssullivan/zig-notify.git vendor/notify
+cd vendor/notify && zig build -Doptimize=ReleaseFast
+```
+
+Link (macOS): `-lzig-notify` (no frameworks; uses osascript binary).
+Link (Linux): `-lzig-notify -lnotify -lglib-2.0 -lgobject-2.0`.
+Include: `#include "zig_notify.h"`.
+
 ## Requirements
 
-- Zig 0.15.2+
+- Zig 0.14.1+
 - macOS 13+ or Linux (libnotify)
 
 ## Architecture

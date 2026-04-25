@@ -1,0 +1,37 @@
+# zig-notify
+
+> Cross-platform desktop notification library in Zig with C FFI -- macOS (osascript) and Linux (libnotify).
+
+Part of the [Tinyland Zig Libraries](https://libs.tinyland.dev).
+
+## Installation
+
+```
+zig fetch --save git+https://github.com/Jesssullivan/zig-notify.git
+```
+
+## Full Documentation
+
+- [API reference](https://libs.tinyland.dev/api/zig-notify/): Zig autodoc
+- [llms-full.txt](https://raw.githubusercontent.com/Jesssullivan/zig-notify/main/llms-full.txt): Complete API dump for LLMs
+- [AGENTS.md](https://github.com/Jesssullivan/zig-notify/blob/main/AGENTS.md): Agent instructions
+
+## C API (4 functions)
+
+- `zig_notify_init(app_name, app_name_len)`: Initialize backend (Linux: notify_init, macOS: no-op). Returns 0/-1.
+- `zig_notify_send(title, title_len, body, body_len, urgency)`: Send notification. body may be NULL. Returns 0/-1.
+- `zig_notify_request_permission()`: Request permission (currently no-op). Returns 0/-1/-2.
+- `zig_notify_deinit()`: Clean up resources (Linux: notify_uninit, macOS: no-op).
+
+## Build
+
+```
+zig build                    # build static library
+zig build test               # run unit tests
+zig build docs               # generate API docs
+```
+
+## Platform Support
+
+- macOS 13+ (arm64/x86_64): osascript, no dependencies
+- Linux (x86_64/arm64): libnotify-dev + glib-2.0

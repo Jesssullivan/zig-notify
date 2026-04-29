@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+         <loc>https://transscendsurvival.org/zig-notify/</loc>
+         <lastmod>2026-04-29</lastmod>
+    </url>
+    <url>
+         <loc>https://transscendsurvival.org/zig-notify/agents/</loc>
+         <lastmod>2026-04-29</lastmod>
+    </url>
+    <url>
+         <loc>https://transscendsurvival.org/zig-notify/source-tree/</loc>
+         <lastmod>2026-04-29</lastmod>
+    </url>
+    <url>
+         <loc>https://transscendsurvival.org/zig-notify/api/c-ffi/</loc>
+         <lastmod>2026-04-29</lastmod>
+    </url>
+    <url>
+         <loc>https://transscendsurvival.org/zig-notify/api/zig-api/</loc>
+         <lastmod>2026-04-29</lastmod>
+    </url>
+    <url>
+         <loc>https://transscendsurvival.org/zig-notify/guides/apple-interop/</loc>
+         <lastmod>2026-04-29</lastmod>
+    </url>
+    <url>
+         <loc>https://transscendsurvival.org/zig-notify/guides/building/</loc>
+         <lastmod>2026-04-29</lastmod>
+    </url>
+    <url>
+         <loc>https://transscendsurvival.org/zig-notify/guides/integration/</loc>
+         <lastmod>2026-04-29</lastmod>
+    </url>
+</urlset>

@@ -27,10 +27,10 @@ typedef enum {
  * @param title_len     Length of title string.
  * @param body          Notification body text (may be NULL).
  * @param body_len      Length of body string (0 if NULL).
- * @param urgency       Urgency level.
+ * @param urgency       Urgency level. Invalid values return -1.
  * @return              0 on success, -1 on failure.
  *
- * macOS: UNUserNotificationCenter (requestAuthorization + add)
+ * macOS: osascript display notification (urgency ignored)
  * Linux: libnotify notify_notification_new + notify_notification_show
  */
 int zig_notify_send(
@@ -40,11 +40,11 @@ int zig_notify_send(
 );
 
 /**
- * Request notification permission (macOS only, no-op on Linux).
+ * Permission shim for notification backends.
  *
  * @return  0 if granted, -1 if denied, -2 on error.
  *
- * macOS: UNUserNotificationCenter.requestAuthorization
+ * macOS: Always returns 0 (osascript backend has no explicit authorization call)
  * Linux: Always returns 0 (no permission model)
  */
 int zig_notify_request_permission(void);

@@ -2,11 +2,11 @@
 
 ## Persona
 
-You are working on zig-notify, a cross-platform desktop notification library written in Zig with a C FFI surface. It sends notifications via osascript on macOS and libnotify on Linux, exposing a unified 4-function C API. Part of the [Tinyland Zig Libraries](https://libs.tinyland.dev).
+You are working on zig-notify, a cross-platform desktop notification library written in Zig with a C FFI surface. It sends notifications via osascript on macOS and libnotify on Linux, exposing a unified 4-function C API.
 
 ## Stack
 
-- **Language:** Zig 0.14.1+
+- **Language:** Zig 0.15.2+
 - **Output:** Static C library (`libzig-notify.a`) + Zig module
 - **Dependencies:** None on macOS (osascript is a system binary); libnotify + glib-2.0 on Linux
 - **Header:** `include/zig_notify.h` (4 C FFI functions)
@@ -16,6 +16,7 @@ You are working on zig-notify, a cross-platform desktop notification library wri
 ## Structure
 
 ```
+src/root.zig             Zig package API root
 src/ffi.zig              C FFI exports (4 functions)
 src/notify.zig           Platform dispatch (comptime macOS/Linux)
 src/notify_macos.zig     macOS backend (osascript `display notification`)
@@ -31,6 +32,7 @@ zig build                              # static library -> zig-out/lib/
 zig build -Doptimize=ReleaseFast       # optimized build
 zig build test                         # unit tests
 zig build docs                         # generate API documentation
+zig build example                      # build C usage example
 ```
 
 ## Style
@@ -45,6 +47,7 @@ zig build docs                         # generate API documentation
 
 - **Do not** add GUI toolkit dependencies (GTK, Qt, Cocoa frameworks)
 - **Do not** bypass osascript on macOS (UNUserNotificationCenter requires an app bundle)
+- **Do not** claim SwiftUI, AppKit, UIKit, Cocoa, APNs, or full UNUserNotificationCenter replacement
 - **Do not** add allocator-dependent APIs to the FFI surface (all buffers use fixed-size stacks)
 - **Do not** make libnotify calls from multiple threads (libnotify is not thread-safe)
 - **Do** keep the init/send/deinit lifecycle simple and symmetric across platforms

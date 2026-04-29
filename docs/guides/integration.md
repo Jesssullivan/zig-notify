@@ -19,12 +19,14 @@ const notify_dep = b.dependency("zig_notify", .{
     .target = target,
     .optimize = optimize,
 });
-exe.linkLibrary(notify_dep.artifact("zig_notify"));
+exe.root_module.addImport("zig-notify", notify_dep.module("zig-notify"));
 ```
+
+For C ABI consumers, build this repository as a static library and link `zig-out/lib/libzig-notify.a`.
 
 ## As a C Static Library
 
-Build and link against `libzig_notify.a`:
+Build and link against `libzig-notify.a`:
 
 ```c
 #include "zig_notify.h"
@@ -49,17 +51,27 @@ int main() {
 
 ## Swift Integration
 
+This repository does not yet ship a SwiftPM package or module map. Use a bridging header that includes `include/zig_notify.h`, add the header search path, and link the static library.
+
 ```swift
 import Foundation
 
-// Send a notification
 let title = "Download Complete"
 let body = "Your file has been saved"
-zig_notify_send(
-    title, title.utf8.count,
-    body, body.utf8.count,
-    ZIG_NOTIFY_URGENCY_NORMAL.rawValue
-)
+var titleCString = Array(title.utf8CString)
+var bodyCString = Array(body.utf8CString)
+
+titleCString.withUnsafeBufferPointer { titleBuffer in
+    bodyCString.withUnsafeBufferPointer { bodyBuffer in
+        _ = zig_notify_send(
+            titleBuffer.baseAddress,
+            title.utf8.count,
+            bodyBuffer.baseAddress,
+            body.utf8.count,
+            ZIG_NOTIFY_URGENCY_NORMAL
+        )
+    }
+}
 ```
 
 ## Urgency Levels
@@ -68,4 +80,4 @@ zig_notify_send(
 |-------|-------|-------------|
 | `ZIG_NOTIFY_URGENCY_LOW` | 0 | Low priority, may be silent |
 | `ZIG_NOTIFY_URGENCY_NORMAL` | 1 | Standard notification |
-| `ZIG_NOTIFY_URGENCY_CRITICAL` | 2 | Critical, may bypass Do Not Disturb |
+| `ZIG_NOTIFY_URGENCY_CRITICAL` | 2 | Critical on Linux/libnotify; ignored by the macOS osascript backend |

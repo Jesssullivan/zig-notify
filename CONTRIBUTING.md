@@ -11,7 +11,7 @@ zig fetch --save git+https://github.com/Jesssullivan/zig-notify.git
 Then in your `build.zig`:
 
 ```zig
-const dep = b.dependency("zig-notify", .{ .target = target, .optimize = optimize });
+const dep = b.dependency("zig_notify", .{ .target = target, .optimize = optimize });
 exe.root_module.addImport("zig-notify", dep.module("zig-notify"));
 ```
 
@@ -30,7 +30,7 @@ Include: `#include "zig_notify.h"`.
 
 ### Prerequisites
 
-- Zig 0.14.1+
+- Zig 0.15.2+
 - **macOS**: No additional dependencies (osascript is a system binary)
 - **Linux**: `sudo apt install libnotify-dev libglib2.0-dev libgdk-pixbuf-2.0-dev` (Debian/Ubuntu) or `sudo dnf install libnotify-devel glib2-devel gdk-pixbuf2-devel` (Fedora/Rocky)
 
@@ -41,13 +41,27 @@ zig build                        # static library
 zig build -Doptimize=ReleaseFast # optimized build
 zig build test                   # unit tests
 zig build docs                   # generate API documentation
+zig build example                # build C example
 ```
+
+## Where to Start
+
+Start with issues labeled [`good first issue`](https://github.com/Jesssullivan/zig-notify/labels/good%20first%20issue) or [`help wanted`](https://github.com/Jesssullivan/zig-notify/labels/help%20wanted).
+
+Small, useful first contributions include:
+
+- SwiftPM/modulemap smoke tests
+- Objective-C bridging samples
+- C header nullability annotations
+- Swift wrapper examples
+- `UNUserNotificationCenter` migration documentation
 
 ### Code Style
 
 - `zig fmt` for formatting
 - All `pub` and `export` functions need `///` doc comments
 - C FFI exports go in `src/ffi.zig`
+- Zig package exports go through `src/root.zig`
 - Platform backends in `src/notify_<platform>.zig`
 
 ### Adding a new platform backend

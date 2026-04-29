@@ -4,9 +4,15 @@ Cross-platform notification abstraction in Zig with C FFI -- macOS (osascript) a
 
 **License:** Zlib OR MIT
 
+**Docs:** https://transscendsurvival.org/zig-notify/
+
 ## Why
 
-Desktop notifications have completely different APIs on macOS (UNUserNotificationCenter or osascript) and Linux (libnotify/D-Bus). This library provides a single C API that works on both platforms, with urgency level support and proper lifecycle management.
+Desktop notifications have different native surfaces on Apple platforms and Linux. Apple applications often call through Swift, Objective-C, AppKit, SwiftUI, or `UNUserNotificationCenter`; Linux applications commonly use libnotify over D-Bus.
+
+zig-notify provides a small, stable C ABI for the narrow local-notification capability: initialize the backend, send a title/body notification, optionally request permission, and clean up. It is meant to make this capability portable across Apple and Linux ports without requiring the rest of an application to keep Apple-specific notification call sites.
+
+It is not a SwiftUI, AppKit, UIKit, Cocoa, APNs, or full `UNUserNotificationCenter` replacement. The current macOS backend deliberately uses `osascript display notification` instead of linking `UserNotifications.framework`.
 
 ## Features
 
@@ -28,7 +34,7 @@ zig fetch --save git+https://github.com/Jesssullivan/zig-notify.git
 Then in your `build.zig`:
 
 ```zig
-const dep = b.dependency("zig-notify", .{ .target = target, .optimize = optimize });
+const dep = b.dependency("zig_notify", .{ .target = target, .optimize = optimize });
 exe.root_module.addImport("zig-notify", dep.module("zig-notify"));
 ```
 
@@ -45,7 +51,7 @@ Include: `#include "zig_notify.h"`.
 
 ## Requirements
 
-- Zig 0.14.1+
+- Zig 0.15.2+
 - macOS 13+ or Linux (libnotify)
 
 ## Architecture
@@ -73,22 +79,24 @@ zig build -Doptimize=ReleaseFast
 
 # Run unit tests
 zig build test
+
+# Build C example
+zig build example
 ```
 
 With Nix:
 
 ```bash
-nix develop       # dev shell
-nix build         # build library package
+nix develop       # dev shell with Zig 0.15.2
 ```
 
 ## Platform Support
 
 | Platform | Backend | Packages | Status |
 |----------|---------|----------|--------|
-| macOS 13+ (arm64/x86_64) | osascript (AppleScript) | None | Tested |
-| Linux (x86_64/arm64) | libnotify (GLib) | `libnotify-dev` (apt) / `libnotify-devel` (dnf) | Supported |
-| Cross-compilation | -- | Libs linked at final build | Supported |
+| macOS 13+ (arm64/x86_64) | osascript (AppleScript) | None | CI build; runtime uses system `osascript` |
+| Linux (x86_64/arm64) | libnotify (GLib) | `libnotify-dev` (apt) / `libnotify-devel` (dnf) | CI build; runtime needs a notification daemon |
+| Cross-compilation | -- | Platform libs linked by the final application | Build surface supported |
 
 ## C FFI API Reference
 
@@ -160,6 +168,19 @@ For direct Zig usage (not via C FFI):
 | `notify.zig` | `deinit()` | Cleanup (Linux: notify_uninit) |
 | `notify.zig` | `Urgency` (enum: low, normal, critical) | Notification urgency level |
 
+## Apple / Swift / Objective-C Interop
+
+zig-notify replaces only the simple local-notification call site. The Apple analogs are `UNUserNotificationCenter.add`, `UNMutableNotificationContent` for title/body text, and legacy AppleScript notification calls. It does not replace SwiftUI view state, AppKit application lifecycle, notification categories/actions, delivered-notification queries, scheduled notifications, APNs, attachments, sounds, or delegate callbacks.
+
+Current parity:
+
+- Available: C ABI callable from Swift, Objective-C, C, C++, and other FFI hosts.
+- Available: macOS title/body notifications without linking Apple notification frameworks.
+- Available: Linux title/body/urgency notifications through libnotify.
+- Not yet available: SwiftPM/modulemap packaging, ObjC nullability annotations, dedicated Swift wrapper types, ObjC sample app, `UNUserNotificationCenter` migration examples, notification categories/actions, scheduling, attachments, and callback/delegate surfaces.
+
+Good starter contributions should focus on those missing interop and documentation gaps before expanding the ABI.
+
 ## Integration
 
 ### As a Git Submodule
@@ -177,14 +198,32 @@ Include: `#include "zig_notify.h"` (path: `vendor/notify/include/`)
 
 ### Swift via Bridging Header
 
-```swift
-#include "zig_notify.h"
+This repo does not yet ship a SwiftPM package or module map. Today, add `include/zig_notify.h` to a bridging header and link the static library yourself.
 
-// Send a notification
+```swift
+import Foundation
+
 let title = "Download Complete"
 let body = "file.zip has been saved"
-zig_notify_send(title, title.utf8.count, body, body.utf8.count, ZIG_NOTIFY_URGENCY_NORMAL)
+var titleCString = Array(title.utf8CString)
+var bodyCString = Array(body.utf8CString)
+
+titleCString.withUnsafeBufferPointer { titleBuffer in
+    bodyCString.withUnsafeBufferPointer { bodyBuffer in
+        _ = zig_notify_send(
+            titleBuffer.baseAddress,
+            title.utf8.count,
+            bodyBuffer.baseAddress,
+            body.utf8.count,
+            ZIG_NOTIFY_URGENCY_NORMAL
+        )
+    }
+}
 ```
+
+## Contributing
+
+Start with the [`good first issue`](https://github.com/Jesssullivan/zig-notify/labels/good%20first%20issue) and [`help wanted`](https://github.com/Jesssullivan/zig-notify/labels/help%20wanted) queues. The best early contributions are small Swift/ObjC interop examples, documentation truthing, header annotations, and build/package smoke tests.
 
 ## License
 

@@ -2,7 +2,7 @@
 
 > Cross-platform desktop notification library in Zig with C FFI -- macOS (osascript) and Linux (libnotify).
 
-Part of the [Tinyland Zig Libraries](https://libs.tinyland.dev). License: Zlib OR MIT.
+Published docs: https://transscendsurvival.org/zig-notify/. License: Zlib OR MIT.
 
 ## Installation
 
@@ -13,7 +13,7 @@ zig fetch --save git+https://github.com/Jesssullivan/zig-notify.git
 Then in build.zig:
 
 ```zig
-const dep = b.dependency("zig-notify", .{ .target = target, .optimize = optimize });
+const dep = b.dependency("zig_notify", .{ .target = target, .optimize = optimize });
 exe.root_module.addImport("zig-notify", dep.module("zig-notify"));
 ```
 
@@ -31,6 +31,7 @@ Include: `#include "zig_notify.h"`.
 ## Source Structure
 
 - `src/ffi.zig` - C FFI exports (4 functions)
+- `src/root.zig` - Zig package API root
 - `src/notify.zig` - Platform dispatch (comptime macOS/Linux selection)
 - `src/notify_macos.zig` - macOS backend (osascript `display notification`)
 - `src/notify_linux.zig` - Linux backend (libnotify GLib API)
@@ -74,7 +75,7 @@ Returns 0 on success, -1 on failure.
 int zig_notify_request_permission(void);
 ```
 
-Request notification permission from the operating system. On macOS this would use `UNUserNotificationCenter.requestAuthorization`; the current implementation returns 0 immediately because the osascript backend does not require explicit permission. On Linux there is no permission model. Returns 0 if granted, -1 if denied, -2 on error.
+Request notification permission from the operating system. The current implementation returns 0 immediately on macOS because the osascript backend does not expose an explicit authorization call. On Linux there is no permission model. Returns 0 if granted, -1 if denied, -2 on error.
 
 ### zig_notify_deinit
 
@@ -85,6 +86,13 @@ void zig_notify_deinit(void);
 Clean up notification backend resources. On Linux, calls `notify_uninit()` to release libnotify state. Should be called once on application exit. No-op on macOS.
 
 ## Zig API Reference
+
+### root.zig (package API)
+
+- `Urgency` - Re-export of `notify.Urgency`.
+- `send` - Re-export of `notify.send`.
+- `init` - Re-export of `notify.init`.
+- `deinit` - Re-export of `notify.deinit`.
 
 ### notify.zig (platform dispatch)
 
@@ -120,6 +128,7 @@ zig build                        # static library
 zig build -Doptimize=ReleaseFast # optimized build
 zig build test                   # unit tests
 zig build docs                   # generate API docs
+zig build example                # build C example
 ```
 
 ## Platform Support
@@ -127,3 +136,17 @@ zig build docs                   # generate API docs
 - macOS 13+ (arm64/x86_64): osascript backend, no frameworks or libraries needed.
 - Linux (x86_64/arm64): libnotify backend, requires `libnotify-dev` (apt) or `libnotify-devel` (dnf) + glib-2.0 + gobject-2.0.
 - A running notification daemon is required on Linux (dunst, mako, GNOME Shell, etc.).
+
+## Apple Interop Scope
+
+zig-notify is not a SwiftUI, AppKit, UIKit, Cocoa, APNs, or full
+UNUserNotificationCenter replacement. It replaces only the simple local
+notification call site behind a stable C ABI.
+
+Current Swift/Objective-C gaps:
+
+- SwiftPM package, module map, or XCFramework packaging
+- Objective-C sample and nullability annotations
+- Dedicated Swift wrapper types
+- UNUserNotificationCenter migration examples
+- Categories, actions, sounds, attachments, scheduling, delivered-notification queries, APNs, and delegate callbacks

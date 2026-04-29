@@ -11,6 +11,7 @@ const notify = @import("notify.zig");
 /// `body` may be null for title-only notifications; if non-null, `body_len`
 /// gives its length.
 /// `urgency` maps to `zig_notify_urgency_t`: 0 = low, 1 = normal, 2 = critical.
+/// Other urgency values return -1.
 ///
 /// On macOS, the notification is sent via `osascript "display notification"`;
 /// urgency is accepted but ignored (macOS has no urgency concept).
@@ -26,10 +27,16 @@ export fn zig_notify_send(
     urgency: u8,
 ) c_int {
     const body_slice: ?[]const u8 = if (body != null and body_len > 0) body.?[0..body_len] else null;
+    const notify_urgency: notify.Urgency = switch (urgency) {
+        0 => .low,
+        1 => .normal,
+        2 => .critical,
+        else => return -1,
+    };
     notify.send(
         title[0..title_len],
         body_slice,
-        @enumFromInt(urgency),
+        notify_urgency,
     ) catch return -1;
     return 0;
 }

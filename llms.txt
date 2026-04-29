@@ -2,7 +2,7 @@
 
 > Cross-platform desktop notification library in Zig with C FFI -- macOS (osascript) and Linux (libnotify).
 
-Part of the [Tinyland Zig Libraries](https://libs.tinyland.dev).
+Published docs: https://transscendsurvival.org/zig-notify/
 
 ## Installation
 
@@ -12,7 +12,8 @@ zig fetch --save git+https://github.com/Jesssullivan/zig-notify.git
 
 ## Full Documentation
 
-- [API reference](https://libs.tinyland.dev/api/zig-notify/): Zig autodoc
+- [Documentation](https://transscendsurvival.org/zig-notify/): MkDocs site
+- [Apple interop](https://transscendsurvival.org/zig-notify/guides/apple-interop/): Swift/ObjC parity and gaps
 - [llms-full.txt](https://raw.githubusercontent.com/Jesssullivan/zig-notify/main/llms-full.txt): Complete API dump for LLMs
 - [AGENTS.md](https://github.com/Jesssullivan/zig-notify/blob/main/AGENTS.md): Agent instructions
 
@@ -29,9 +30,18 @@ zig fetch --save git+https://github.com/Jesssullivan/zig-notify.git
 zig build                    # build static library
 zig build test               # run unit tests
 zig build docs               # generate API docs
+zig build example            # build C example
 ```
 
 ## Platform Support
 
 - macOS 13+ (arm64/x86_64): osascript, no dependencies
 - Linux (x86_64/arm64): libnotify-dev + glib-2.0
+
+## Apple Interop Scope
+
+zig-notify replaces a narrow local-notification call site, not SwiftUI,
+AppKit, UIKit, Cocoa, APNs, or the full UNUserNotificationCenter API.
+Current Swift/ObjC gaps include SwiftPM/modulemap packaging, ObjC examples,
+nullability annotations, Swift wrappers, migration examples, actions,
+scheduling, attachments, and delegate callbacks.

@@ -11,13 +11,12 @@
 zig build -Doptimize=ReleaseFast
 ```
 
-Produces `zig-out/lib/libzig_notify.a` with the C header at `include/zig_notify.h`.
+Produces `zig-out/lib/libzig-notify.a` with the C header at `include/zig_notify.h`.
 
 ## With Nix
 
 ```bash
-nix develop        # dev shell
-nix build          # build package
+nix develop        # dev shell with Zig 0.15.2
 ```
 
 ## Running Tests
@@ -28,7 +27,7 @@ zig build test
 
 ## Platform Dependencies
 
-**macOS**: Uses `UNUserNotificationCenter` via ObjC bridge. Links against `UserNotifications.framework` at final link time.
+**macOS**: Uses the system `osascript` binary. No Apple notification framework is linked by this library.
 
 **Linux**: Requires `libnotify-dev`:
 
@@ -39,3 +38,5 @@ sudo apt install libnotify-dev
 # Fedora
 sudo dnf install libnotify-devel
 ```
+
+Linux runtime delivery also requires a desktop notification daemon such as GNOME Shell, dunst, mako, or another implementation that receives libnotify/D-Bus notifications.
